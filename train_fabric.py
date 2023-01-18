@@ -14,6 +14,8 @@ $ lightning run model --accelerator=cuda --precision=bf16 --devices=8 --num_node
 - Run on the worker node:
 $ lightning run model --accelerator=cuda --precision=bf16 --devices=8 --num_nodes=2 --node_rank=1 --main_address=123.456.123.456 --main_port=1234 train_fabric.py
 (If your cluster does not have Infiniband interconnect prepend NCCL_IB_DISABLE=1)
+
+Try also --strategy="deepspeed" with devices > 1.
 """
 
 import os
@@ -71,7 +73,6 @@ exec(open('configurator.py').read()) # overrides from command line or config fil
 config = {k: globals()[k] for k in config_keys} # will be useful for logging
 # -----------------------------------------------------------------------------
 
-# Try also strategy="ddp" or strategy="deepspeed" with devices > 1
 fabric = Fabric()
 
 master_process = fabric.global_rank == 0
