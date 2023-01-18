@@ -71,8 +71,8 @@ exec(open('configurator.py').read()) # overrides from command line or config fil
 config = {k: globals()[k] for k in config_keys} # will be useful for logging
 # -----------------------------------------------------------------------------
 
-# Try also strategy="ddp" or strategy="deepspeed"
-fabric = Fabric(accelerator="cuda", devices=1, precision="bf16")
+# Try also strategy="ddp" or strategy="deepspeed" with devices > 1
+fabric = Fabric(accelerator="cuda", devices=4, strategy="ddp", precision="bf16")
 fabric.launch()
 
 master_process = fabric.global_rank == 0
