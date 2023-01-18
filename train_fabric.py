@@ -72,7 +72,7 @@ config = {k: globals()[k] for k in config_keys} # will be useful for logging
 # -----------------------------------------------------------------------------
 
 # Try also strategy="ddp" or strategy="deepspeed" with devices > 1
-fabric = Fabric(accelerator="cuda", precision="bf16")
+fabric = Fabric(precision="bf16")
 
 master_process = fabric.global_rank == 0
 
