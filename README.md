@@ -6,7 +6,8 @@
 
 - Handles all the device logic for you
 - Easily switch from debugging on CPU to multi-GPU and multi-node training
-- Brings useful tools to build a trainer (callbacks, logging, checkpoints)
+- Brings useful tools to help you build a trainer (callbacks, logging, checkpoints)
+- Designed with multi-billion parameter models in mind
 
 
 **See [train_fabric.py](train_fabric.py)**
