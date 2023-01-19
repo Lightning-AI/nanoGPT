@@ -4,8 +4,8 @@
 **This is [Karpathy's nanoGPT](https://github.com/karpathy/nanoGPT) repo with the addition of [Fabric](https://pytorch-lightning.readthedocs.io/en/latest/fabric/fabric.html).**
 **Fabric the fast and lightweight way to scale your models without boilerplate code.**
 
-- Handles all the boilerplate device logic for you ()
-- Easily switch from debugging on CPU to multi-GPU and multi-node training
+- Handles all the boilerplate device logic for you
+- Easily switch from debugging on CPU to GPU (Apple M1/M2, NVIDIA CUDA etc.) or multi-GPU or even multi-node training
 - Brings useful tools to help you build a trainer (callbacks, logging, checkpoints)
 - Designed with multi-billion parameter models in mind
 
