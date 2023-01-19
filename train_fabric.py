@@ -164,6 +164,12 @@ if compile:
     unoptimized_model = model
     model = torch.compile(model) # requires PyTorch 2.0
 
+
+# setup according to the precision, accelerator and strategy passed in
+# to the Fabric constructor, that is:
+# 1. move model and optimizer to the chosen device
+# 2. prepare the model for the chosen precision
+# 3. wrap the model according to the chosen strategy
 model, optimizer = fabric.setup(model, optimizer)
 
 
