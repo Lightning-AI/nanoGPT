@@ -77,7 +77,7 @@ fabric = Fabric()
 
 master_process = fabric.global_rank == 0
 
-if master_process == 0:
+if master_process:
     os.makedirs(out_dir, exist_ok=True)
 
 fabric.seed_everything(1337 + fabric.global_rank)
@@ -202,7 +202,7 @@ def get_lr(iter):
     return min_lr + coeff * (learning_rate - min_lr)
 
 # logging
-if wandb_log and master_process == 0:
+if wandb_log and master_process:
     import wandb
     wandb.init(project=wandb_project, name=wandb_run_name, config=config)
 
