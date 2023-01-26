@@ -212,7 +212,7 @@ while True:
         lr = learning_rate
 
     # evaluate the loss on train/val sets and write checkpoints
-    if iter_num % eval_interval == 0:
+    if iter_num % eval_interval == 0 and iter_num > 0:
         fabric.print("Running validation")
         losses = estimate_loss()
         fabric.print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
@@ -225,17 +225,16 @@ while True:
             })
         if losses['val'] < best_val_loss or always_save_checkpoint:
             best_val_loss = losses['val']
-            if iter_num > 0:
-                checkpoint = {
-                    'model': model,
-                    'optimizer': optimizer,
-                    'model_args': model_args,
-                    'iter_num': iter_num,
-                    'best_val_loss': best_val_loss,
-                    'config': config,
-                }
-                fabric.print(f"saving checkpoint to {out_dir}")
-                fabric.save(os.path.join(out_dir, 'ckpt.pt'), checkpoint)
+            checkpoint = {
+                'model': model,
+                'optimizer': optimizer,
+                'model_args': model_args,
+                'iter_num': iter_num,
+                'best_val_loss': best_val_loss,
+                'config': config,
+            }
+            fabric.print(f"saving checkpoint to {out_dir}")
+            fabric.save(os.path.join(out_dir, 'ckpt.pt'), checkpoint)
 
     if iter_num == 0 and eval_only:
         break
