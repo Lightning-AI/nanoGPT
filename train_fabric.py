@@ -213,8 +213,9 @@ while True:
 
     # evaluate the loss on train/val sets and write checkpoints
     if iter_num % eval_interval == 0:
+        fabric.print("Running validation")
         losses = estimate_loss()
-        print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+        fabric.print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
         if wandb_log and master_process:
             wandb.log({
                 "iter": iter_num,
@@ -233,7 +234,7 @@ while True:
                     'best_val_loss': best_val_loss,
                     'config': config,
                 }
-                print(f"saving checkpoint to {out_dir}")
+                fabric.print(f"saving checkpoint to {out_dir}")
                 fabric.save(os.path.join(out_dir, 'ckpt.pt'), checkpoint)
 
     if iter_num == 0 and eval_only:
