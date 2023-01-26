@@ -247,7 +247,7 @@ while True:
         break
 
     # forward backward update, with optional gradient accumulation to simulate larger batch size
-    optimizer.zero_grad(set_to_none=True)
+    optimizer.zero_grad()
     for micro_step in range(gradient_accumulation_steps):
         X, Y = get_batch('train')
         with fabric.no_backward_sync(model, enabled=(micro_step < gradient_accumulation_steps - 1)):
