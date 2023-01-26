@@ -111,32 +111,39 @@ else:
     print(f"vocab_size not found in {meta_path}, using GPT-2 default of 50257")
     vocab_size = 50257
 
-# model init
+
 model_args = dict(n_layer = n_layer, n_head = n_head, n_embd = n_embd, block_size = block_size, dropout = dropout, vocab_size = vocab_size)
-if init_from == 'scratch':
-    # init a new model from scratch
-    print("Initializing a new model from scratch")
-    gptconf = GPTConfig(**model_args)
-    model = GPT(gptconf)
-elif init_from == 'resume':
+
+
+gptconf = GPTConfig(**model_args)
+model = GPT(gptconf)
+optimizer = model.configure_optimizers(weight_decay, learning_rate, (beta1, beta2))
+
+# setup according to the precision, accelerator and strategy passed in
+# to the Fabric constructor, that is:
+# 1. move model and optimizer to the chosen device
+# 2. prepare the model for the chosen precision
+# 3. wrap the model according to the chosen strategy
+model, optimizer = fabric.setup(model, optimizer)
+
+
+# model init
+if init_from == 'resume':
     print(f"Resuming training from {out_dir}")
     # resume training from a checkpoint.
     ckpt_path = os.path.join(out_dir, 'ckpt.pt')
-    checkpoint = torch.load(ckpt_path, map_location=device)
-    checkpoint_model_args = checkpoint['model_args']
-    for k, v in model_args.items():
-        assert checkpoint_model_args[k] == v, "for now"
-        # TODO: think through how passed in params should interact with checkpoint params
-    gptconf = GPTConfig(**model_args)
-    model = GPT(gptconf)
-    state_dict = checkpoint['model']
     # fix the keys of the state dictionary :(
     # honestly no idea how checkpoints sometimes get this prefix, have to debug more
-    unwanted_prefix = '_orig_mod.'
-    for k,v in list(state_dict.items()):
-        if k.startswith(unwanted_prefix):
-            state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
-    model.load_state_dict(state_dict)
+    checkpoint = {
+        'model': model,
+        'optimizer': optimizer,
+        'model_args': model_args,
+        'iter_num': iter_num,
+        'best_val_loss': best_val_loss,
+        'config': config,
+    }
+    print(f"saving checkpoint to {out_dir}")
+    fabric.load(ckpt_path, checkpoint)
     iter_num = checkpoint['iter_num']
     best_val_loss = checkpoint['best_val_loss']
 elif init_from.startswith('gpt2'):
@@ -152,25 +159,11 @@ elif init_from.startswith('gpt2'):
 if block_size < model.config.block_size:
     model.crop_block_size(block_size)
 
-
-# optimizer
-optimizer = model.configure_optimizers(weight_decay, learning_rate, (beta1, beta2))
-if init_from == 'resume':
-    optimizer.load_state_dict(checkpoint['optimizer'])
-
 # compile the model
 if compile:
     print("compiling the model... (takes a ~minute)")
     unoptimized_model = model
     model = torch.compile(model) # requires PyTorch 2.0
-
-
-# setup according to the precision, accelerator and strategy passed in
-# to the Fabric constructor, that is:
-# 1. move model and optimizer to the chosen device
-# 2. prepare the model for the chosen precision
-# 3. wrap the model according to the chosen strategy
-model, optimizer = fabric.setup(model, optimizer)
 
 
 @torch.no_grad()
