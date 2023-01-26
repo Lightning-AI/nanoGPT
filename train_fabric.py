@@ -34,7 +34,7 @@ from model import GPTConfig, GPT
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
 out_dir = 'out'
-eval_interval = 2000
+eval_interval = 4
 log_interval = 1
 eval_iters = 200
 eval_only = False # if True, script exits right after the first eval
@@ -219,10 +219,10 @@ while True:
         lr = learning_rate
 
     # evaluate the loss on train/val sets and write checkpoints
-    if iter_num % eval_interval == 0 and master_process:
+    if iter_num % eval_interval == 0:
         losses = estimate_loss()
         print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
-        if wandb_log:
+        if wandb_log and master_process:
             wandb.log({
                 "iter": iter_num,
                 "train/loss": losses['train'],
@@ -233,15 +233,16 @@ while True:
             best_val_loss = losses['val']
             if iter_num > 0:
                 checkpoint = {
-                    'model': model.state_dict(),
-                    'optimizer': optimizer.state_dict(),
+                    'model': model,
+                    'optimizer': optimizer,
                     'model_args': model_args,
                     'iter_num': iter_num,
                     'best_val_loss': best_val_loss,
                     'config': config,
                 }
                 print(f"saving checkpoint to {out_dir}")
-                fabric.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+                fabric.save(os.path.join(out_dir, 'ckpt.pt'), checkpoint)
+
     if iter_num == 0 and eval_only:
         break
 
