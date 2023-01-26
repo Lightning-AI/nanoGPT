@@ -142,7 +142,7 @@ if init_from == 'resume':
         'best_val_loss': best_val_loss,
         'config': config,
     }
-    print(f"saving checkpoint to {out_dir}")
+    print(f"loading checkpoint from {out_dir}")
     fabric.load(ckpt_path, checkpoint)
     iter_num = checkpoint['iter_num']
     best_val_loss = checkpoint['best_val_loss']
