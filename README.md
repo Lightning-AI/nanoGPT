@@ -139,6 +139,8 @@ $ python train.py config/train_shakespeare_char.py --device=cpu --compile=False 
 
 Where we decrease the context length to just 64 characters and only use a batch size of 8.
 
+Finally, on Apple Silicon Macbooks you can use device `--device mps` ("Metal Performance Shaders"), which can significantly accelerate training (2-3X). You will need a specific version of PyTorch. See [Issue 28](https://github.com/karpathy/nanoGPT/issues/28).
+
 ## benchmarking
 
 For model benchmarking `bench.py` might be useful. It's identical to what happens in the meat of the training loop of `train.py`, but omits much of the other complexities.
@@ -169,8 +171,6 @@ Features / APIs
 
 Suspiciousness
 
-- Current initialization (PyTorch default) departs from GPT-2. In a very quick experiment I found it to be superior to the one suggested in the papers, but that can't be right?
-- I don't currently seem to need gradient clipping but it is very often used (?). Nothing is exploding so far at these scales but maybe I'm leaving performance on the table. Evaluate with/without.
 - I am still not 100% confident that my GPT-2 small reproduction hyperparameters are good, if someone has reproduced GPT-2 I'd be eager to exchange notes ty
 - I keep seeing different values cited for weight decay and AdamW betas, look into
 - I can't exactly reproduce Chinchilla paper results, see [scaling_laws.ipynb](scaling_laws.ipynb) notebook
