@@ -18,5 +18,5 @@ Results below were obtained on a 8 x A100 GPU Lambda server. All experiments wit
 
 ## Convergence Parity
 
-[W&B Report](https://wandb.ai/justusschock/gpt2-fabric/reports/NanoGPT-with-Fabric--VmlldzozNDU2MTU1)
+We ran the PyTorch code and the Fabric code with the same parameters and compared the train/val loss curves in this [W&B Report](https://wandb.ai/justusschock/gpt2-fabric/reports/NanoGPT-with-Fabric--VmlldzozNDU2MTU1).
 

@@ -10,7 +10,7 @@
 - Designed with multi-billion parameter sharded models in mind
 
 
-**See [train_fabric.py](train_fabric.py)**
+**See [train_fabric.py](train_fabric.py)** and the [benchmarks](./BENCHMARKS.md).
 
 ----
 
