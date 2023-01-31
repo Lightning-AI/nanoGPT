@@ -41,8 +41,8 @@ always_save_checkpoint = True # if True, always save a checkpoint after each eva
 init_from = 'scratch' # 'scratch' or 'resume' or 'gpt2*'
 # wandb logging
 wandb_log = False # disabled by default
-wandb_project = 'owt'
-wandb_run_name = 'gpt2' # 'run' + str(time.time())
+wandb_project = 'gpt2-fabric'
+wandb_run_name = 'ddp-pytorch' # 'run' + str(time.time())
 # data
 dataset = 'openwebtext'
 gradient_accumulation_steps = 1 # used to simulate larger batch sizes
@@ -216,7 +216,7 @@ def get_lr(iter):
 # logging
 if wandb_log and master_process:
     import wandb
-    wandb.init(project=wandb_project, name=wandb_run_name, config=config)
+    wandb.init(entity="justusschock", project=wandb_project, name=wandb_run_name, config=config)
 
 # training loop
 t0 = time.time()
