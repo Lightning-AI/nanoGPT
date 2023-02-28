@@ -85,6 +85,7 @@ if master_process:
 fabric.seed_everything(1337 + fabric.global_rank)
 # torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
 # torch.backends.cudnn.allow_tf32 = True # allow tf32 on cudnn
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 torch.backends.cudnn.benchmark = False
 torch.use_deterministic_algorithms(True)
 
