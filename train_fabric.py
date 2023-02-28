@@ -165,5 +165,7 @@ while True:
     if iter_num > max_iters:
         break
 
+    iter_num += 1
+
 fabric.print("iter time", torch.mean(torch.tensor(timings)).item())
 # fabric.print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=100))
