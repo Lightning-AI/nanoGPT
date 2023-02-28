@@ -249,18 +249,18 @@ with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_sh
         if iter_num == 0 and eval_only:
             break
 
-            # forward backward update, with optional gradient accumulation to simulate larger batch size
-            optimizer.zero_grad(set_to_none=True)
-            for micro_step in range(gradient_accumulation_steps):
-                X, Y = get_batch('train')
-                with fabric.no_backward_sync(model, enabled=(micro_step < gradient_accumulation_steps - 1)):
-                    with record_function("forward"):
-                        logits, loss = model(X, Y)
-                    with record_function("backward"):
-                        fabric.backward(loss)
+        # forward backward update, with optional gradient accumulation to simulate larger batch size
+        optimizer.zero_grad(set_to_none=True)
+        for micro_step in range(gradient_accumulation_steps):
+            X, Y = get_batch('train')
+            with fabric.no_backward_sync(model, enabled=(micro_step < gradient_accumulation_steps - 1)):
+                with record_function("forward"):
+                    logits, loss = model(X, Y)
+                with record_function("backward"):
+                    fabric.backward(loss)
 
-            with record_function("optimizer_step"):
-                optimizer.step()
+        with record_function("optimizer_step"):
+            optimizer.step()
 
 
         # timing and logging
