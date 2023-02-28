@@ -139,31 +139,31 @@ if init_from == 'resume':
 # 3. wrap the model according to the chosen strategy
 model, optimizer = fabric.setup(model, optimizer)
 
-timings = []
-with profile(activities=[ProfilerActivity.CUDA]) as prof:
+# timings = []
+# with profile(activities=[ProfilerActivity.CUDA]) as prof:
 
-    while True:
-        t0 = time.perf_counter()
+while True:
+    t0 = time.perf_counter()
 
-        # forward backward update, with optional gradient accumulation to simulate larger batch size
-        optimizer.zero_grad(set_to_none=True)
-        for micro_step in range(gradient_accumulation_steps):
-            X, Y = get_batch('train')
-            with fabric.no_backward_sync(model, enabled=(micro_step < gradient_accumulation_steps - 1)):
-                with record_function("forward"):
-                    logits, loss = model(X, Y)
-                with record_function("backward"):
-                    fabric.backward(loss)
+    # forward backward update, with optional gradient accumulation to simulate larger batch size
+    optimizer.zero_grad(set_to_none=True)
+    for micro_step in range(gradient_accumulation_steps):
+        X, Y = get_batch('train')
+        with fabric.no_backward_sync(model, enabled=(micro_step < gradient_accumulation_steps - 1)):
+            # with record_function("forward"):
+            logits, loss = model(X, Y)
+            # with record_function("backward"):
+            fabric.backward(loss)
 
-        with record_function("optimizer_step"):
-            optimizer.step()
+    # with record_function("optimizer_step"):
+    optimizer.step()
 
-        t1 = time.perf_counter()
-        timings.append(t1 - t0)
+    t1 = time.perf_counter()
+    timings.append(t1 - t0)
 
-        # termination conditions
-        if iter_num > max_iters:
-            break
+    # termination conditions
+    if iter_num > max_iters:
+        break
 
 fabric.print("iter time", torch.mean(torch.tensor(timings)).item())
-fabric.print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=100))
+# fabric.print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=100))
