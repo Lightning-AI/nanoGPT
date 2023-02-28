@@ -139,7 +139,7 @@ if init_from == 'resume':
 # 3. wrap the model according to the chosen strategy
 model, optimizer = fabric.setup(model, optimizer)
 
-# timings = []
+timings = []
 # with profile(activities=[ProfilerActivity.CUDA]) as prof:
 
 while True:
