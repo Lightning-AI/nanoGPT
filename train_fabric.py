@@ -29,6 +29,8 @@ from lightning.fabric import Fabric
 
 from model import GPTConfig, GPT
 
+from torch.profiler import profile, record_function, ProfilerActivity
+
 
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
@@ -245,14 +247,22 @@ while True:
     if iter_num == 0 and eval_only:
         break
 
-    # forward backward update, with optional gradient accumulation to simulate larger batch size
-    optimizer.zero_grad(set_to_none=True)
-    for micro_step in range(gradient_accumulation_steps):
-        X, Y = get_batch('train')
-        with fabric.no_backward_sync(model, enabled=(micro_step < gradient_accumulation_steps - 1)):
-            logits, loss = model(X, Y)
-            fabric.backward(loss)
-    optimizer.step()
+    with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
+
+        # forward backward update, with optional gradient accumulation to simulate larger batch size
+        optimizer.zero_grad(set_to_none=True)
+        for micro_step in range(gradient_accumulation_steps):
+            X, Y = get_batch('train')
+            with fabric.no_backward_sync(model, enabled=(micro_step < gradient_accumulation_steps - 1)):
+                with record_function("forward"):
+                    logits, loss = model(X, Y)
+                with record_function("backward"):
+                    fabric.backward(loss)
+
+        with record_function("optimizer_step"):
+            optimizer.step()
+
+    fabric.print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=100))
 
     # timing and logging
     t1 = time.time()
