@@ -210,69 +210,70 @@ if wandb_log and master_process:
 
 # training loop
 t0 = time.time()
-while True:
+with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
 
-    # determine the learning rate for this iteration
-    if decay_lr:
-        lr = get_lr(iter_num)
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = lr
-    else:
-        lr = learning_rate
+    while True:
 
-    # evaluate the loss on train/val sets and write checkpoints
-    if iter_num % eval_interval == 0 and master_process:
-        losses = estimate_loss()
-        print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
-        if wandb_log:
-            wandb.log({
-                "iter": iter_num,
-                "train/loss": losses['train'],
-                "val/loss": losses['val'],
-                "lr": lr,
-            })
-        if losses['val'] < best_val_loss or always_save_checkpoint:
-            best_val_loss = losses['val']
-            if iter_num > 0:
-                checkpoint = {
-                    'model': model.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'model_args': model_args,
-                    'iter_num': iter_num,
-                    'best_val_loss': best_val_loss,
-                    'config': config,
-                }
-                print(f"saving checkpoint to {out_dir}")
-                fabric.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
-    if iter_num == 0 and eval_only:
-        break
+        # determine the learning rate for this iteration
+        if decay_lr:
+            lr = get_lr(iter_num)
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
+        else:
+            lr = learning_rate
 
-    with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
+        # evaluate the loss on train/val sets and write checkpoints
+        if iter_num % eval_interval == 0 and master_process:
+            losses = estimate_loss()
+            print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+            if wandb_log:
+                wandb.log({
+                    "iter": iter_num,
+                    "train/loss": losses['train'],
+                    "val/loss": losses['val'],
+                    "lr": lr,
+                })
+            if losses['val'] < best_val_loss or always_save_checkpoint:
+                best_val_loss = losses['val']
+                if iter_num > 0:
+                    checkpoint = {
+                        'model': model.state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                        'model_args': model_args,
+                        'iter_num': iter_num,
+                        'best_val_loss': best_val_loss,
+                        'config': config,
+                    }
+                    print(f"saving checkpoint to {out_dir}")
+                    fabric.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+        if iter_num == 0 and eval_only:
+            break
 
-        # forward backward update, with optional gradient accumulation to simulate larger batch size
-        optimizer.zero_grad(set_to_none=True)
-        for micro_step in range(gradient_accumulation_steps):
-            X, Y = get_batch('train')
-            with fabric.no_backward_sync(model, enabled=(micro_step < gradient_accumulation_steps - 1)):
-                with record_function("forward"):
-                    logits, loss = model(X, Y)
-                with record_function("backward"):
-                    fabric.backward(loss)
+            # forward backward update, with optional gradient accumulation to simulate larger batch size
+            optimizer.zero_grad(set_to_none=True)
+            for micro_step in range(gradient_accumulation_steps):
+                X, Y = get_batch('train')
+                with fabric.no_backward_sync(model, enabled=(micro_step < gradient_accumulation_steps - 1)):
+                    with record_function("forward"):
+                        logits, loss = model(X, Y)
+                    with record_function("backward"):
+                        fabric.backward(loss)
 
-        with record_function("optimizer_step"):
-            optimizer.step()
+            with record_function("optimizer_step"):
+                optimizer.step()
 
-    fabric.print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=100))
 
-    # timing and logging
-    t1 = time.time()
-    dt = t1 - t0
-    t0 = t1
-    if iter_num % log_interval == 0 and master_process:
-        lossf = loss.item() # loss as float. TODO note CPU-GPU sync! profile, make sure not too slow
-        print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms")
-    iter_num += 1
+        # timing and logging
+        t1 = time.time()
+        dt = t1 - t0
+        t0 = t1
+        if iter_num % log_interval == 0 and master_process:
+            lossf = loss.item() # loss as float. TODO note CPU-GPU sync! profile, make sure not too slow
+            print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms")
+        iter_num += 1
 
-    # termination conditions
-    if iter_num > max_iters:
-        break
+        # termination conditions
+        if iter_num > max_iters:
+            break
+
+fabric.print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=100))
