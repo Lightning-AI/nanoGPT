@@ -83,8 +83,10 @@ if master_process:
     os.makedirs(out_dir, exist_ok=True)
 
 fabric.seed_everything(1337 + fabric.global_rank)
-torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
-torch.backends.cudnn.allow_tf32 = True # allow tf32 on cudnn
+# torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
+# torch.backends.cudnn.allow_tf32 = True # allow tf32 on cudnn
+torch.backends.cudnn.benchmark = False
+torch.use_deterministic_algorithms(True)
 
 # poor man's data loader, TODO evaluate need for actual DataLoader
 data_dir = os.path.join('data', dataset)
