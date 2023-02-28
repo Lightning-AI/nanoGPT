@@ -58,7 +58,7 @@ n_embd = 768
 dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
-max_iters = 50 # total number of training iterations
+max_iters = 500 # total number of training iterations
 weight_decay = 1e-2
 beta1 = 0.9
 beta2 = 0.95
@@ -167,5 +167,5 @@ while True:
 
     iter_num += 1
 
-fabric.print("iter time", torch.mean(torch.tensor(timings)).item())
+fabric.print("iter time", torch.mean(torch.tensor(timings[5:])).item())
 # fabric.print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=100))
